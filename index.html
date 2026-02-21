@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LWKlearning Boot</title>
+
+<style>
+html, body {
+    margin: 0;
+    height: 100%;
+    background: black;
+    font-family: "Courier New", monospace;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 1s ease;
+}
+
+/* CRT wrapper */
+.crt {
+    position: relative;
+    width: 90%;
+    max-width: 900px;
+    color: #33ff33;
+    text-shadow: 0 0 8px #33ff33;
+    animation: flicker 0.15s infinite;
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+
+/* Scanlines */
+.crt::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(0,255,0,0.05) 0px,
+        rgba(0,255,0,0.05) 2px,
+        transparent 2px,
+        transparent 4px
+    );
+    pointer-events: none;
+}
+
+/* Vignette */
+.crt::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center,
+        transparent 60%,
+        rgba(0,0,0,0.75) 100%);
+    pointer-events: none;
+}
+
+/* Flicker */
+@keyframes flicker {
+    0% { opacity: 0.98; }
+    50% { opacity: 1; }
+    100% { opacity: 0.97; }
+}
+
+.centered {
+    text-align: center;
+    font-size: 26px;
+}
+
+.terminal-line {
+    margin: 14px 0;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+}
+
+.visible {
+    opacity: 1;
+}
+
+.prompt {
+    color: #00ff66;
+}
+
+.bookmark-link {
+    display: inline-block;
+    margin-top: 25px;
+    padding: 16px 32px;
+    border: 2px solid #33ff33;
+    color: #33ff33;
+    text-decoration: none;
+    font-size: 30px;
+    cursor: grab;
+}
+
+.bookmark-link:hover {
+    background: #003300;
+}
+
+button {
+    margin-top: 35px;
+    padding: 14px 30px;
+    font-size: 22px;
+    background: transparent;
+    border: 2px solid #33ff33;
+    color: #33ff33;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #003300;
+}
+
+/* MINI TERMINAL — FIXED */
+#miniTerminal {
+    position: fixed;
+    top: 15px;
+    left: 20px;
+    width: 380px;
+    font-size: 14px;
+    text-align: left;
+    display: none;
+
+    color: #33ff33;
+    text-shadow: 0 0 6px #33ff33;
+    animation: flicker 0.15s infinite;
+}
+
+#miniTerminal div {
+    margin-bottom: 6px;
+}
+
+.fade-out {
+    opacity: 0;
+}
+</style>
+</head>
+<body>
+
+<div class="crt" id="crt">
+
+    <div class="centered" id="mainContent">
+        <div class="terminal-line">LWKlearning System Boot v5.1</div>
+        <div class="terminal-line">------------------------------------</div>
+        <div class="terminal-line">
+            <span class="prompt">$</span> bookmark link to preserve access
+        </div>
+        <div class="terminal-line">
+            drag to bookmarks bar or right-click → bookmark
+        </div>
+
+        <a class="bookmark-link terminal-line"
+           href="https://lwkloading.github.io/"
+           draggable="true">
+            LWKlearning
+        </a>
+
+        <div class="terminal-line" style="margin-top:40px;">
+            <span class="prompt">$</span> run continue.sh
+        </div>
+
+        <button onclick="runSequence()" class="terminal-line">./continue</button>
+    </div>
+
+</div>
+
+<div id="miniTerminal"></div>
+
+<audio id="hum" loop>
+    <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_4c4f3f9d6a.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="beep">
+    <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_2b2d6c0f7c.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="shutdown">
+    <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_1b8b6c1f61.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const crt = document.getElementById("crt");
+const lines = document.querySelectorAll(".terminal-line");
+const hum = document.getElementById("hum");
+const beep = document.getElementById("beep");
+const shutdown = document.getElementById("shutdown");
+const miniTerminal = document.getElementById("miniTerminal");
+const mainContent = document.getElementById("mainContent");
+
+function setCookie(name, value, days) {
+    const d = new Date();
+    d.setTime(d.getTime() + (days*24*60*60*1000));
+    document.cookie = name + "=" + value + "; expires=" + d.toUTCString() + "; path=/";
+}
+function getCookie(name) {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? match[2] : null;
+}
+
+window.onload = () => {
+    crt.style.opacity = 1;
+    const seen = getCookie("lwk_seen");
+
+    if (!seen) {
+        setCookie("lwk_seen", "true", 365);
+        startBoot();
+    } else {
+        lines.forEach(line => line.classList.add("visible"));
+        hum.volume = 0.2;
+        hum.play().catch(()=>{});
+    }
+};
+
+function startBoot() {
+    hum.volume = 0.2;
+    hum.play().catch(()=>{});
+    let i = 0;
+    function reveal() {
+        if (i < lines.length) {
+            lines[i].classList.add("visible");
+            beep.currentTime = 0;
+            beep.play().catch(()=>{});
+            i++;
+            setTimeout(reveal, 300);
+        }
+    }
+    reveal();
+}
+
+function runSequence() {
+    document.querySelector("button").disabled = true;
+    mainContent.classList.add("fade-out");
+
+    setTimeout(() => {
+        mainContent.style.display = "none";
+        miniTerminal.style.display = "block";
+        runMiniCommands();
+    }, 1000);
+}
+
+function runMiniCommands() {
+    const cmds = [
+        "Initializing connection...",
+        "doing anything but adding new games",
+        "Bypassing dramatic firewall...",
+        "Calibrating modules...",
+        "Feeding hamsters...",
+        "Compiling definitely-real code...",
+        "Access granted.",
+        "Redirecting..."
+    ];
+
+    let i = 0;
+
+    function next() {
+        if (i < cmds.length) {
+            const div = document.createElement("div");
+            div.textContent = "> " + cmds[i];
+            miniTerminal.appendChild(div);
+
+            beep.currentTime = 0;
+            beep.play().catch(()=>{});
+
+            i++;
+            setTimeout(next, 700);
+        } else {
+            hum.pause();
+            shutdown.play().catch(()=>{});
+            document.body.classList.add("fade-out");
+            setTimeout(() => {
+                window.location.href = "https://super-field-2580.maxandbudzhaha.workers.dev/?url=https://%6C%77%6B%6C%65%61%72%6E%69%6E%67%2E%67%69%74%68%75%62%2E%69%6F/";
+            }, 1500);
+        }
+    }
+
+    next();
+}
+</script>
+
+</body>
+</html>
