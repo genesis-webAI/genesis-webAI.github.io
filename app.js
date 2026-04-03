@@ -1403,15 +1403,17 @@ async function exportProjectZip() {
     name: project.name,
     description: project.description,
     settings: project.settings,
-    revisions: project.revisions
+    revisions: project.revisions,
+    fileEntries: project.files.map((file) => file.name),
+    assetEntries: project.assets.map((asset) => asset.name)
   };
   const entries = [createZipEntry("manifest.json", JSON.stringify(manifest, null, 2))];
   project.files.forEach((file) => {
     const exportAssetPaths = buildExportAssetPathsForFile(file.name, project.assets);
     const content = prepareFileForExport(file, exportAssetPaths);
-    entries.push(createZipEntry(`files/${file.name}`, content));
+    entries.push(createZipEntry(file.name, content));
   });
-  project.assets.forEach((asset) => entries.push(createZipEntry(`assets/${asset.name}`, asset.content)));
+  project.assets.forEach((asset) => entries.push(createZipEntry(asset.name, asset.content)));
 
   const bytes = buildZip(entries);
   const blob = new Blob([bytes], { type: "application/zip" });
@@ -1438,18 +1440,30 @@ async function importProjectZip(event) {
     project.description = manifest.description || "";
     project.settings.model = MODELS.includes(manifest.settings?.model) ? manifest.settings.model : "gemini-2.5-flash";
     project.revisions = Array.isArray(manifest.revisions) ? manifest.revisions.slice(0, MAX_REVISIONS) : [];
-    project.files = entries.filter((entry) => entry.name.startsWith("files/")).map((entry) => ({
-      id: crypto.randomUUID(),
-      name: entry.name.slice("files/".length),
-      type: inferType(entry.name.slice("files/".length), true),
-      content: decodeUtf8(entry.data)
-    }));
-    project.assets = entries.filter((entry) => entry.name.startsWith("assets/")).map((entry) => ({
-      id: crypto.randomUUID(),
-      name: entry.name.slice("assets/".length),
-      type: inferType(entry.name.slice("assets/".length), false),
-      content: decodeUtf8(entry.data)
-    }));
+    const flatFileEntries = Array.isArray(manifest.fileEntries)
+      ? entries.filter((entry) => manifest.fileEntries.includes(entry.name))
+      : [];
+    const flatAssetEntries = Array.isArray(manifest.assetEntries)
+      ? entries.filter((entry) => manifest.assetEntries.includes(entry.name))
+      : [];
+    project.files = (flatFileEntries.length ? flatFileEntries : entries.filter((entry) => entry.name.startsWith("files/"))).map((entry) => {
+      const name = flatFileEntries.length ? entry.name : entry.name.slice("files/".length);
+      return {
+        id: crypto.randomUUID(),
+        name,
+        type: inferType(name, true),
+        content: decodeUtf8(entry.data)
+      };
+    });
+    project.assets = (flatAssetEntries.length ? flatAssetEntries : entries.filter((entry) => entry.name.startsWith("assets/"))).map((entry) => {
+      const name = flatAssetEntries.length ? entry.name : entry.name.slice("assets/".length);
+      return {
+        id: crypto.randomUUID(),
+        name,
+        type: inferType(name, false),
+        content: decodeUtf8(entry.data)
+      };
+    });
     if (!project.files.length) {
       project.files = [defaultFile()];
     }
@@ -1795,10 +1809,7 @@ function buildExportAssetPathsForFile(fileName, assets) {
 }
 
 function toExportAssetPath(fileName, assetName) {
-  const fileSegments = String(fileName).split("/").filter(Boolean);
-  const depth = Math.max(0, fileSegments.length - 1);
-  const up = "../".repeat(depth + 1);
-  return `${up}assets/${assetName}`;
+  return assetName;
 }
 
 function prepareFileForExport(file, assetPaths) {
