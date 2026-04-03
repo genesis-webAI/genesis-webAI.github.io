@@ -515,6 +515,7 @@ textarea {
   flex-direction: column;
   gap: 14px;
   min-height: 100%;
+  min-width: 360px;
   overflow: hidden;
   height: 100%;
 }
@@ -798,6 +799,7 @@ body.dark-mode .startup-gate {
 
   .dock-body {
     padding: 14px;
+    overflow-x: auto;
   }
 
   .ai-chat-card {
@@ -805,7 +807,7 @@ body.dark-mode .startup-gate {
   }
 
   .ai-bubble {
-    max-width: 100%;
+    max-width: min(100%, 42rem);
     max-height: none;
     overflow-wrap: anywhere;
   }
@@ -831,6 +833,14 @@ body.dark-mode .startup-gate {
     padding: 12px;
   }
 
+  .dock-panel.active {
+    min-width: max-content;
+  }
+
+  .ai-panel-shell {
+    min-width: 360px;
+  }
+
   .section-head {
     align-items: flex-start;
     flex-direction: column;
@@ -847,6 +857,7 @@ body.dark-mode .startup-gate {
   .ai-bubble {
     padding: 12px;
     font-size: 0.96rem;
+    width: fit-content;
   }
 
   .ai-composer {
